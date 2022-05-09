@@ -1,7 +1,0 @@
-# Site-library
-/Lib
-/Include
-
-# Python
-**/__pycache__
-pyvenv.cfg
