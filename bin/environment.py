@@ -1,3 +1,4 @@
+from typing import Union
 import random
 import pygame
 import math
@@ -212,17 +213,26 @@ class Environment:
         self.next_obj_spawn = 300
         self.time = pygame.time.Clock()
 
-    def get_state(self, dino:Dino) -> List[float]:
-        return [math.dist(dino.get_top_right(), self.objects[0].get_top_left()), math.dist(dino.get_bottom_right(), self.objects[0].get_bottom_left())]
+    def get_state(self, dino:Dino, return_int:bool = False) -> Union[list[float], Tuple[int]]:
+        ret = [math.dist(dino.get_top_right(), self.objects[0].get_top_left()), math.dist(dino.get_bottom_right(), self.objects[0].get_bottom_left())]
+        if return_int:
+            return tuple([int(x) for x in ret])
+        return ret
 
     def debug(self):
         if self.mode:
             print(self.score, end='\r')
 
-    def play_step(self, dinos:list[Dino], act:list[int]):
-        if len(dinos) != len(act): raise Exception('len(dinos) != len(act)')
+    def play_step(self, dinos:list[Dino], act:list[int]) -> Tuple[list[Dino], float]:
+        '''
+            Return 
+                Died dino list[Dino] (In order to support population simulation)
+                Reward [int]
+        '''
+        if len(dinos) != len(act): raise IndexError('len(dinos) != len(act)')
         self.debug()
         died_dino = []
+        reward = .1
         for inx, dino in enumerate(dinos):
             if act[inx] == 0:
                 dino.normal()
@@ -232,9 +242,13 @@ class Environment:
             elif act[inx] == 2:
                 dino.crawl()
             if self.isCollision(dino):
+                reward = -1000
                 died_dino.append(dino)
             dino.move()
         for obj in self.objects:
+            # Reward Scheme for Q learning
+            if obj.get_bottom_left()[1] < dinos[0].get_top_left()[1] and reward != -1000:
+                reward = 100
             if obj.get_top_right()[0] < 0:
                 self.objects.remove(obj)
             obj.move()
@@ -247,8 +261,7 @@ class Environment:
             self.next_obj_spawn = random.randint(DELTA_SPAWN_LIMIT[0], DELTA_SPAWN_LIMIT[1])
         self.ground.move()
         self.score += 1
-        self.time.tick(30)
-        return died_dino
+        return died_dino, reward
 
     def isCollision(self, dino:Dino):
         return isCollision(dino, self.objects[0])
@@ -266,6 +279,7 @@ class Environment:
         screen.blit(score, (10, 10))
         screen.blit(num_dino, (10, 40))
         pygame.display.update()
+        self.time.tick(30)
     
 
 if __name__ == '__main__':
