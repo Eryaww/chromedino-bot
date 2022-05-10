@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="D:\code\py\geneticAlgo\chrome_dino"
+VIRTUAL_ENV="D:\Code\Py\bot\chrome_dino"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
