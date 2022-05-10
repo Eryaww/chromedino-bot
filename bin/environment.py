@@ -118,10 +118,13 @@ class Cactus(Object):
     def __init__(self, type:int, entry:int=0, **kwargs) -> None:
         if type == 0:
             img = self.imgSmall
+            self.type = 3
         elif type == 1:
             img = self.imgBig
+            self.type = 4
         else:
             img = self.imgMany
+            self.type = 5
         super().__init__(SCREEN_SIZE[0], 316, img, entry, **kwargs)
 
 class Bird(Object):
@@ -134,10 +137,13 @@ class Bird(Object):
         '''
         if height == 0:
             y = 320
+            self.type = 0
         if height == 1:
             y = 280
+            self.type = 1
         else:
             y = 260
+            self.type = 2
             
         super().__init__(SCREEN_SIZE[0], y, self.img, entry, **kwargs)
     
@@ -219,20 +225,31 @@ class Environment:
             return tuple([int(x) for x in ret])
         return ret
 
-    def debug(self):
-        if self.mode:
-            print(self.score, end='\r')
+    def get_state_v2(self, dino:Dino) -> Tuple[int, int, int, int]:
+        # assert hasattr(self.objects[0], 'type')
+        ret = tuple([dino.get_top_left()[1], self.objects[0].get_top_left()[0], self.objects[0].type])
+        return tuple([int(x) for x in ret])
 
-    def play_step(self, dinos:list[Dino], act:list[int]) -> Tuple[list[Dino], float]:
+    def play_step_v2(self, dino:Dino, action:int):
+        """
+            Return next_state, reward, done
+        """
+        isDead = self.play_step([dino], [action])
+        if isDead:
+            return 0, -1000, True
+        if self.objects[0].get_bottom_left()[1] <= dino.get_top_left()[1]:
+            return self.get_state(dino, return_int=True), 100, False
+        return self.get_state(dino, return_int=True), .1, False
+
+    # Genetic Algo Approach
+    def play_step(self, dinos:list[Dino], act:list[int]) -> list[Dino]:
         '''
             Return 
                 Died dino list[Dino] (In order to support population simulation)
                 Reward [int]
         '''
         if len(dinos) != len(act): raise IndexError('len(dinos) != len(act)')
-        self.debug()
         died_dino = []
-        reward = .1
         for inx, dino in enumerate(dinos):
             if act[inx] == 0:
                 dino.normal()
@@ -242,13 +259,9 @@ class Environment:
             elif act[inx] == 2:
                 dino.crawl()
             if self.isCollision(dino):
-                reward = -1000
                 died_dino.append(dino)
             dino.move()
         for obj in self.objects:
-            # Reward Scheme for Q learning
-            if obj.get_bottom_left()[1] < dinos[0].get_top_left()[1] and reward != -1000:
-                reward = 100
             if obj.get_top_right()[0] < 0:
                 self.objects.remove(obj)
             obj.move()
@@ -261,7 +274,7 @@ class Environment:
             self.next_obj_spawn = random.randint(DELTA_SPAWN_LIMIT[0], DELTA_SPAWN_LIMIT[1])
         self.ground.move()
         self.score += 1
-        return died_dino, reward
+        return died_dino
 
     def isCollision(self, dino:Dino):
         return isCollision(dino, self.objects[0])

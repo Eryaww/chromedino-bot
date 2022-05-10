@@ -26,7 +26,7 @@ def evolve(genome, config):
         for inx, net in enumerate(nets):
             act.append(np.argmax(net.activate(inputs=(env.get_state(dinos[inx]))))) # [stay, jump, crawl]
         # Reward is not used since we are not using a Q-table
-        died_dinos, _ = env.play_step(dinos, act)
+        died_dinos = env.play_step(dinos, act)
         for dino in died_dinos:
             inx = dinos.index(dino)
             dinos.pop(inx)
