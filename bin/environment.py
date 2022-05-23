@@ -236,10 +236,12 @@ class Environment:
         """
         isDead = self.play_step([dino], [action])
         if isDead:
-            return 0, -1000, True
+            return None, -1000, True
         if self.objects[0].get_bottom_left()[1] <= dino.get_top_left()[1]:
-            return self.get_state(dino, return_int=True), 100, False
-        return self.get_state(dino, return_int=True), .1, False
+        #     return self.get_state(dino, return_int=True), 100, False
+            return self.get_state_v2(dino), 100, False
+        # return self.get_state(dino, return_int=True), .1, False
+        return self.get_state_v2(dino), .1, False
 
     # Genetic Algo Approach
     def play_step(self, dinos:list[Dino], act:list[int]) -> list[Dino]:

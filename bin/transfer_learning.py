@@ -3,6 +3,12 @@
 '''
 import numpy as np
 
+def qtableToDqn():
+    def recurs(dimension:int, array:np.ndarray):
+
+    recu
+
+
 if __name__ == '__main__':
     arr:np.ndarray = np.load('q_table.npy')
     shp = (25, )+ arr.shape[1:]
